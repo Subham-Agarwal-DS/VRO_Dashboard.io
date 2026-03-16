@@ -146,11 +146,11 @@
       "Demand Date": "2025-09-01T00:00:00",
       "Candidate name": "Danny Rand",
       "Date Job Requirement Released": "2025-11-11T00:00:00",
-      "Date Offered": null,
-      "Date Onboarded": null,
+      "Date Offered": "2025-11-01T00:00:00",
+      "Date Onboarded": "2025-11-14T00:00:00",
       "Internal/External": "Internal",
       "Pipeline Updated": null,
-      "Candidate Stage": "Interviewing",
+      "Candidate Stage": "Offered",
       "Role_IDP": "ITES_ITTeam5_IT Support Specialist",
       "Role ID": 3
     },
@@ -6128,12 +6128,12 @@
       "Stream": "ITES",
       "Demand Date": "2025-09-01T00:00:00",
       "Date Job Requirement Released": "2025-11-11T00:00:00",
-      "Date Offered": null,
-      "Date Onboarded": null,
+      "Date Offered": "2025-11-01T00:00:00",
+      "Date Onboarded": "2025-11-14T00:00:00",
       "Internal/External": "Internal",
       "Pipeline Updated": 0,
-      "Time to Offer": null,
-      "Time to Onboard": null
+      "Time to Offer": -10,
+      "Time to Onboard": 3
     },
     {
       "Role ID": 4,
