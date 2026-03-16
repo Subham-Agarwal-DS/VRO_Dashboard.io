@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Accenture - Value Realization Dashboard</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root {
+      --bg: #120716;
+      --panel: #1c1024;
+      --panel-2: #241231;
+      --panel-3: #301740;
+      --text: #f5effa;
+      --muted: #c9b7d8;
+      --line: rgba(255,255,255,0.12);
+      --purple: #7c3aed;
+      --purple-2: #a855f7;
+      --purple-3: #c084fc;
+      --pink: #ec4899;
+      --black-page: #050505;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Arial, sans-serif;
+      background: radial-gradient(circle at top left, #241231 0%, var(--bg) 50%, #09040d 100%);
+      color: var(--text);
+    }
+    .app {
+      min-height: 100vh;
+      padding: 18px 22px 26px;
+    }
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(260px, 360px) 1fr;
+      gap: 18px;
+      align-items: center;
+    }
+    .brand {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .tabs {
+      display: grid;
+      grid-template-columns: 52px repeat(6, 1fr);
+      gap: 8px;
+      align-items: center;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      padding: 8px;
+    }
+    .tab {
+      border: none;
+      background: transparent;
+      color: var(--text);
+      padding: 12px 10px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: 0.2s ease;
+      min-height: 46px;
+    }
+    .tab:hover { background: rgba(255,255,255,0.05); }
+    .tab.active {
+      background: linear-gradient(135deg, var(--pink), #f472b6);
+      color: #fff;
+    }
+    .divider {
+      margin: 16px 0 18px;
+      border: none;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.25), rgba(255,255,255,0.08));
+    }
+    .page-header {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: start;
+      margin-bottom: 18px;
+    }
+    .page-title { font-size: 30px; font-weight: 700; margin: 0 0 6px; }
+    .page-subtitle { color: var(--muted); margin: 0; font-size: 15px; }
+    .filters { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .filter-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      padding: 10px 12px;
+      border-radius: 14px;
+      min-width: 220px;
+    }
+    .filter-card label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    select {
+      width: 100%;
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+    .page { display: none; }
+    .page.active { display: block; }
+    .home-page {
+      background: var(--black-page);
+      border-radius: 24px;
+      min-height: calc(100vh - 170px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .home-box {
+      width: min(560px, 90%);
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: linear-gradient(180deg, rgba(124,58,237,0.18), rgba(236,72,153,0.12));
+      text-align: center;
+      padding: 42px 28px;
+      color: #f7eefe;
+      font-size: 28px;
+      font-weight: 700;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.35);
+    }
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .kpi {
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.025));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 16px;
+    }
+    .kpi .label { color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+    .kpi .value { font-size: 28px; font-weight: 700; }
+    .kpi .sub { margin-top: 6px; color: #eac7ff; font-size: 13px; }
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 14px;
+      min-height: 140px;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+    }
+    .card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .card-title h3 { margin: 0; font-size: 18px; }
+    .card-title span { color: var(--muted); font-size: 12px; }
+    .plot { width: 100%; height: 100%; min-height: 290px; }
+    .small-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      margin-top: 16px;
+    }
+    .small-plot { min-height: 250px; }
+    .detail-view {
+      display: none;
+      margin-top: 8px;
+    }
+    .detail-view.active { display: block; }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: none;
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .placeholder {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 20px;
+      min-height: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 22px;
+      text-align: center;
+      padding: 24px;
+    }
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .loader {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 18px;
+    }
+    .error {
+      background: rgba(127,29,29,0.35);
+      border: 1px solid rgba(248,113,113,0.35);
+      color: #fee2e2;
+      padding: 14px;
+      border-radius: 14px;
+    }
+    @media (max-width: 1200px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .kpis { grid-template-columns: repeat(2, minmax(180px, 1fr)); }
+    }
+    @media (max-width: 920px) {
+      .topbar, .page-header { grid-template-columns: 1fr; }
+      .tabs { grid-template-columns: 52px repeat(6, minmax(110px, 1fr)); overflow-x: auto; }
+      .small-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .app { padding: 14px; }
+      .brand { font-size: 22px; }
+      .page-title { font-size: 24px; }
+      .kpis { grid-template-columns: 1fr; }
+      .home-box { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">Accenture - Value Realization Dashboard</div>
+      <div class="tabs" id="tabs"></div>
+    </div>
+    <hr class="divider" />
+
+    <section class="page active" data-page="home">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">VRO Dashboard</h1>
+          <p class="page-subtitle">Please select a tab to explore dashboard progress.</p>
+        </div>
+      </div>
+      <div class="home-page">
+        <div class="home-box">Please visit a tab to see progress.</div>
+      </div>
+    </section>
+
+    <section class="page" data-page="rampup">
+      <div id="rampup-main">
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Ramp-up Progress</h1>
+            <p class="page-subtitle">Progression of GCC Headcount</p>
+          </div>
+          <div class="filters">
+            <div class="filter-card">
+              <label for="hireTypeFilter">Internal &amp; External Status of employees hired</label>
+              <select id="hireTypeFilter">
+                <option value="All">All</option>
+                <option value="Internal">Internal</option>
+                <option value="External">External</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="rampup-status" class="loader">Loading dashboard data...</div>
+        <div id="rampup-content" style="display:none;">
+          <div class="kpis" id="kpis"></div>
+          <div class="main-grid">
+            <div class="card">
+              <div class="card-title">
+                <h3>Overall Ramp-up Progress</h3>
+                <span>Click the gauge for a detailed view</span>
+              </div>
+              <div id="overallGauge" class="plot"></div>
+            </div>
+            <div class="card">
+              <div class="card-title">
+                <h3>Planned vs Actual by Function</h3>
+                <span>Hover for details</span>
+              </div>
+              <div id="functionBar" class="plot"></div>
+            </div>
+          </div>
+          <div class="small-grid" id="smallGauges"></div>
+        </div>
+      </div>
+
+      <div id="rampup-detail" class="detail-view">
+        <button class="back-btn" id="detailBackBtn">← Back</button>
+        <div class="page-header">
+          <div>
+            <h1 class="page-title" id="detailTitle">Ramp-up Detail</h1>
+            <p class="page-subtitle" id="detailSubtitle">Detailed view</p>
+          </div>
+        </div>
+        <div class="main-grid">
+          <div class="card">
+            <div class="card-title">
+              <h3>Cumulative Progress Over Time</h3>
+              <span>Click a point to inspect values</span>
+            </div>
+            <div id="detailTrend" class="plot"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">
+              <h3>Monthly Actual vs Plan</h3>
+              <span>Hover for tooltips</span>
+            </div>
+            <div id="detailMonthly" class="plot"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" data-page="health">
+      <div class="page-header"><div><h1 class="page-title">Health KPIs</h1><p class="page-subtitle">Health</p></div></div>
+      <div class="placeholder">This page is intentionally left blank for now.</div>
+    </section>
+    <section class="page" data-page="financials">
+      <div class="page-header"><div><h1 class="page-title">Financial Dashboard</h1><p class="page-subtitle">Financials</p></div></div>
+      <div class="placeholder">This page is intentionally left blank for now.</div>
+    </section>
+    <section class="page" data-page="people">
+      <div class="page-header"><div><h1 class="page-title">People &amp; Culture</h1><p class="page-subtitle">People &amp; Culture</p></div></div>
+      <div class="placeholder">This page is intentionally left blank for now.</div>
+    </section>
+    <section class="page" data-page="delivery">
+      <div class="page-header"><div><h1 class="page-title">Delivery Metrics</h1><p class="page-subtitle">Delivery</p></div></div>
+      <div class="placeholder">This page is intentionally left blank for now.</div>
+    </section>
+    <section class="page" data-page="governance">
+      <div class="page-header"><div><h1 class="page-title">Program Governance</h1><p class="page-subtitle">Program Governance</p></div></div>
+      <div class="placeholder">This page is intentionally left blank for now.</div>
+    </section>
+  </div>
+
+  <script>
+    const tabs = [
+      { id: 'home', label: '⌂' },
+      { id: 'rampup', label: 'Ramp-up Progress' },
+      { id: 'health', label: 'Health' },
+      { id: 'financials', label: 'Financials' },
+      { id: 'people', label: 'People & Culture' },
+      { id: 'delivery', label: 'Delivery' },
+      { id: 'governance', label: 'Program Governance' }
+    ];
+
+    const state = {
+      workbook: null,
+      activePage: 'home',
+      hireType: 'All',
+      rampDetail: null
+    };
+
+    function renderTabs() {
+      const container = document.getElementById('tabs');
+      container.innerHTML = '';
+      tabs.forEach(tab => {
+        const btn = document.createElement('button');
+        btn.className = 'tab' + (state.activePage === tab.id ? ' active' : '');
+        btn.textContent = tab.label;
+        btn.title = tab.id === 'home' ? 'Home' : tab.label;
+        btn.addEventListener('click', () => setPage(tab.id));
+        container.appendChild(btn);
+      });
+    }
+
+    function setPage(pageId) {
+      state.activePage = pageId;
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.toggle('active', page.dataset.page === pageId);
+      });
+      renderTabs();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (pageId !== 'rampup') resetRampupDetail();
+    }
+
+    function toDate(value) {
+      if (!value) return null;
+      const d = new Date(value);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+
+    function monthKey(date) {
+      if (!date) return null;
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      return `${y}-${m}`;
+    }
+
+    function monthLabelFromKey(key) {
+      const [y, m] = key.split('-').map(Number);
+      const d = new Date(y, m - 1, 1);
+      return d.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+    }
+
+    function normalizeHireType(v) {
+      return String(v || '').trim();
+    }
+
+    function loadWorkbook() {
+      return fetch(`./data/workbook.json?ts=${Date.now()}`)
+        .then(res => {
+          if (!res.ok) throw new Error('Unable to load ./data/workbook.json');
+          return res.json();
+        });
+    }
+
+    function getRampupData() {
+      const raw = state.workbook?.['Raw Data Final'] || [];
+      const planned = state.workbook?.['Planned Demand'] || [];
+      const filter = state.hireType;
+
+      const actualRows = raw.filter(r => {
+        const onboarded = r['Date Onboarded'];
+        const hireType = normalizeHireType(r['Internal/External']);
+        const validOnboard = onboarded !== null && onboarded !== undefined && String(onboarded).trim() !== '';
+        if (!validOnboard) return false;
+        if (filter === 'All') return true;
+        return hireType.toLowerCase() === filter.toLowerCase();
+      });
+
+      const actualByStream = {};
+      const monthlyActualByStream = {};
+      actualRows.forEach(r => {
+        const stream = String(r['Stream'] || 'Unknown').trim();
+        actualByStream[stream] = (actualByStream[stream] || 0) + 1;
+        const mk = monthKey(toDate(r['Date Onboarded']));
+        if (mk) {
+          monthlyActualByStream[stream] ||= {};
+          monthlyActualByStream[stream][mk] = (monthlyActualByStream[stream][mk] || 0) + 1;
+        }
+      });
+
+      const targetByStream = {};
+      const monthlyPlannedByStream = {};
+      planned.forEach(r => {
+        const stream = String(r['Stream Code'] || 'Unknown').trim();
+        const demand = Number(r['Planned Demand'] || 0);
+        targetByStream[stream] = (targetByStream[stream] || 0) + demand;
+        const monthSow = String(r['Month-SOW'] || '').trim();
+        let mk = null;
+        if (monthSow) {
+          const d = new Date(monthSow.replace(/-/g, ' '));
+          if (!Number.isNaN(d.getTime())) mk = monthKey(d);
+        }
+        if (!mk) {
+          const year = Number(r['Year']);
+          const monthName = String(r['Month'] || '').trim();
+          const d = new Date(`${monthName} 1, ${year}`);
+          if (!Number.isNaN(d.getTime())) mk = monthKey(d);
+        }
+        if (mk) {
+          monthlyPlannedByStream[stream] ||= {};
+          monthlyPlannedByStream[stream][mk] = (monthlyPlannedByStream[stream][mk] || 0) + demand;
+        }
+      });
+
+      const streams = Array.from(new Set([...Object.keys(targetByStream), ...Object.keys(actualByStream)])).sort();
+      const totalTarget = Object.values(targetByStream).reduce((a, b) => a + b, 0);
+      const totalActual = Object.values(actualByStream).reduce((a, b) => a + b, 0);
+      const remaining = Math.max(totalTarget - totalActual, 0);
+      const progressPct = totalTarget ? (totalActual / totalTarget) * 100 : 0;
+
+      return {
+        streams,
+        totalTarget,
+        totalActual,
+        remaining,
+        progressPct,
+        actualByStream,
+        targetByStream,
+        monthlyActualByStream,
+        monthlyPlannedByStream,
+        actualRows
+      };
+    }
+
+    function basePlotLayout(title) {
+      return {
+        title: title ? { text: title, font: { color: '#f5effa', size: 16 } } : undefined,
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#f5effa', family: 'Inter, Segoe UI, Arial, sans-serif' },
+        margin: { l: 40, r: 28, t: 40, b: 40 },
+        xaxis: { gridcolor: 'rgba(255,255,255,0.08)', zerolinecolor: 'rgba(255,255,255,0.08)' },
+        yaxis: { gridcolor: 'rgba(255,255,255,0.08)', zerolinecolor: 'rgba(255,255,255,0.08)' },
+        legend: { orientation: 'h', y: 1.12, x: 0 }
+      };
+    }
+
+    function gaugeColor(actual, target) {
+      const ratio = target ? actual / target : 0;
+      if (ratio >= 0.85) return '#22c55e';
+      if (ratio >= 0.5) return '#f59e0b';
+      return '#ec4899';
+    }
+
+    function renderKpis(data) {
+      const kpis = [
+        { label: 'Target Ramp-up', value: data.totalTarget, sub: 'From Planned Demand' },
+        { label: 'Actual Onboarded', value: data.totalActual, sub: `${state.hireType} hires filter` },
+        { label: 'Remaining Gap', value: data.remaining, sub: 'Target minus onboarded' },
+        { label: 'Progress %', value: `${data.progressPct.toFixed(1)}%`, sub: 'Overall completion' }
+      ];
+      document.getElementById('kpis').innerHTML = kpis.map(k => `
+        <div class="kpi">
+          <div class="label">${k.label}</div>
+          <div class="value">${k.value}</div>
+          <div class="sub">${k.sub}</div>
+        </div>`).join('');
+    }
+
+    function renderOverallGauge(data) {
+      const fig = [{
+        type: 'indicator',
+        mode: 'gauge+number+delta',
+        value: data.totalActual,
+        delta: { reference: data.totalTarget, increasing: { color: '#22c55e' }, decreasing: { color: '#f87171' } },
+        number: { suffix: ` / ${data.totalTarget}` },
+        title: { text: 'Overall Headcount Progress' },
+        gauge: {
+          axis: { range: [0, Math.max(data.totalTarget, data.totalActual, 1)], tickcolor: '#fff' },
+          bar: { color: gaugeColor(data.totalActual, data.totalTarget), thickness: 0.4 },
+          bgcolor: 'rgba(255,255,255,0.03)',
+          bordercolor: 'rgba(255,255,255,0.12)',
+          steps: [
+            { range: [0, Math.max(data.totalTarget, data.totalActual, 1) * 0.5], color: 'rgba(236,72,153,0.18)' },
+            { range: [Math.max(data.totalTarget, data.totalActual, 1) * 0.5, Math.max(data.totalTarget, data.totalActual, 1) * 0.85], color: 'rgba(245,158,11,0.18)' },
+            { range: [Math.max(data.totalTarget, data.totalActual, 1) * 0.85, Math.max(data.totalTarget, data.totalActual, 1)], color: 'rgba(34,197,94,0.18)' }
+          ],
+          threshold: { line: { color: '#c084fc', width: 4 }, thickness: 0.8, value: data.totalTarget }
+        },
+        customdata: ['All GCC'],
+        hovertemplate: 'Actual onboarded: %{value}<br>Target: ' + data.totalTarget + '<br>Click for more details<extra></extra>'
+      }];
+      Plotly.newPlot('overallGauge', fig, {
+        ...basePlotLayout(),
+        margin: { l: 20, r: 20, t: 40, b: 10 }
+      }, { responsive: true, displayModeBar: false });
+
+      document.getElementById('overallGauge').on('plotly_click', () => openRampupDetail('All GCC'));
+    }
+
+    function renderFunctionBar(data) {
+      const x = data.streams;
+      const target = x.map(s => data.targetByStream[s] || 0);
+      const actual = x.map(s => data.actualByStream[s] || 0);
+      Plotly.newPlot('functionBar', [
+        {
+          type: 'bar',
+          name: 'Target',
+          x, y: target,
+          marker: { color: '#7c3aed' },
+          hovertemplate: 'Function: %{x}<br>Target: %{y}<extra></extra>'
+        },
+        {
+          type: 'bar',
+          name: 'Actual',
+          x, y: actual,
+          marker: { color: '#ec4899' },
+          hovertemplate: 'Function: %{x}<br>Actual onboarded: %{y}<br>Click bar for detail<extra></extra>'
+        }
+      ], {
+        ...basePlotLayout(),
+        barmode: 'group',
+        margin: { l: 50, r: 20, t: 24, b: 50 }
+      }, { responsive: true, displayModeBar: false });
+
+      document.getElementById('functionBar').on('plotly_click', evt => {
+        const functionName = evt?.points?.[0]?.x;
+        if (functionName) openRampupDetail(functionName);
+      });
+    }
+
+    function renderSmallGauges(data) {
+      const container = document.getElementById('smallGauges');
+      container.innerHTML = data.streams.map(stream => `
+        <div class="card">
+          <div class="card-title"><h3>${stream}</h3><span>Click to drill in</span></div>
+          <div id="gauge-${stream}" class="plot small-plot"></div>
+        </div>
+      `).join('');
+
+      data.streams.forEach(stream => {
+        const target = data.targetByStream[stream] || 0;
+        const actual = data.actualByStream[stream] || 0;
+        Plotly.newPlot(`gauge-${stream}`, [{
+          type: 'indicator',
+          mode: 'gauge+number',
+          value: actual,
+          number: { suffix: ` / ${target}` },
+          title: { text: `${stream} Progress` },
+          gauge: {
+            axis: { range: [0, Math.max(target, actual, 1)] },
+            bar: { color: gaugeColor(actual, target) },
+            bgcolor: 'rgba(255,255,255,0.03)',
+            bordercolor: 'rgba(255,255,255,0.12)',
+            threshold: { line: { color: '#c084fc', width: 3 }, thickness: 0.8, value: target }
+          },
+          hovertemplate: `${stream}<br>Actual: ${actual}<br>Target: ${target}<extra></extra>`
+        }], {
+          ...basePlotLayout(),
+          margin: { l: 18, r: 18, t: 30, b: 6 }
+        }, { responsive: true, displayModeBar: false });
+        document.getElementById(`gauge-${stream}`).on('plotly_click', () => openRampupDetail(stream));
+      });
+    }
+
+    function cumulativeValues(monthMap) {
+      const keys = Object.keys(monthMap || {}).sort();
+      let run = 0;
+      return {
+        keys,
+        values: keys.map(k => (run += Number(monthMap[k] || 0)))
+      };
+    }
+
+    function openRampupDetail(scope) {
+      state.rampDetail = scope;
+      document.getElementById('rampup-main').style.display = 'none';
+      document.getElementById('rampup-detail').classList.add('active');
+      document.getElementById('detailTitle').textContent = scope === 'All GCC' ? 'Ramp-up Detail - All GCC' : `Ramp-up Detail - ${scope}`;
+      document.getElementById('detailSubtitle').textContent = scope === 'All GCC'
+        ? 'Detailed trend view for overall ramp-up progress'
+        : `Detailed trend view for ${scope}`;
+      renderRampupDetail();
+    }
+
+    function resetRampupDetail() {
+      state.rampDetail = null;
+      document.getElementById('rampup-main').style.display = 'block';
+      document.getElementById('rampup-detail').classList.remove('active');
+    }
+
+    function renderRampupDetail() {
+      const data = getRampupData();
+      const scope = state.rampDetail || 'All GCC';
+      let planMap = {};
+      let actualMap = {};
+
+      if (scope === 'All GCC') {
+        Object.values(data.monthlyPlannedByStream).forEach(streamMap => {
+          Object.entries(streamMap).forEach(([k, v]) => { planMap[k] = (planMap[k] || 0) + Number(v || 0); });
+        });
+        Object.values(data.monthlyActualByStream).forEach(streamMap => {
+          Object.entries(streamMap).forEach(([k, v]) => { actualMap[k] = (actualMap[k] || 0) + Number(v || 0); });
+        });
+      } else {
+        planMap = data.monthlyPlannedByStream[scope] || {};
+        actualMap = data.monthlyActualByStream[scope] || {};
+      }
+
+      const allKeys = Array.from(new Set([...Object.keys(planMap), ...Object.keys(actualMap)])).sort();
+      const labels = allKeys.map(monthLabelFromKey);
+      const monthlyPlan = allKeys.map(k => Number(planMap[k] || 0));
+      const monthlyActual = allKeys.map(k => Number(actualMap[k] || 0));
+
+      let cumP = 0;
+      let cumA = 0;
+      const cumPlan = monthlyPlan.map(v => (cumP += v));
+      const cumActual = monthlyActual.map(v => (cumA += v));
+
+      Plotly.newPlot('detailTrend', [
+        {
+          type: 'scatter',
+          mode: 'lines+markers',
+          name: 'Cumulative Target',
+          x: labels,
+          y: cumPlan,
+          line: { color: '#a855f7', width: 3 },
+          marker: { size: 8 },
+          hovertemplate: '%{x}<br>Cumulative target: %{y}<extra></extra>'
+        },
+        {
+          type: 'scatter',
+          mode: 'lines+markers',
+          name: 'Cumulative Actual',
+          x: labels,
+          y: cumActual,
+          line: { color: '#ec4899', width: 3 },
+          marker: { size: 8 },
+          hovertemplate: '%{x}<br>Cumulative actual: %{y}<extra></extra>'
+        }
+      ], {
+        ...basePlotLayout(),
+        margin: { l: 50, r: 20, t: 26, b: 50 }
+      }, { responsive: true, displayModeBar: false });
+
+      Plotly.newPlot('detailMonthly', [
+        {
+          type: 'bar',
+          name: 'Monthly Target',
+          x: labels,
+          y: monthlyPlan,
+          marker: { color: '#7c3aed' },
+          hovertemplate: '%{x}<br>Monthly target: %{y}<extra></extra>'
+        },
+        {
+          type: 'bar',
+          name: 'Monthly Actual',
+          x: labels,
+          y: monthlyActual,
+          marker: { color: '#ec4899' },
+          hovertemplate: '%{x}<br>Monthly actual: %{y}<extra></extra>'
+        }
+      ], {
+        ...basePlotLayout(),
+        barmode: 'group',
+        margin: { l: 50, r: 20, t: 26, b: 60 }
+      }, { responsive: true, displayModeBar: false });
+    }
+
+    function renderRampupPage() {
+      const status = document.getElementById('rampup-status');
+      const content = document.getElementById('rampup-content');
+      try {
+        const data = getRampupData();
+        renderKpis(data);
+        renderOverallGauge(data);
+        renderFunctionBar(data);
+        renderSmallGauges(data);
+        status.style.display = 'none';
+        content.style.display = 'block';
+      } catch (e) {
+        status.className = 'error';
+        status.textContent = 'Unable to render Ramp-up Progress. Check that workbook.json contains the sheets "Raw Data Final" and "Planned Demand".';
+      }
+    }
+
+    document.getElementById('hireTypeFilter').addEventListener('change', e => {
+      state.hireType = e.target.value;
+      resetRampupDetail();
+      renderRampupPage();
+    });
+
+    document.getElementById('detailBackBtn').addEventListener('click', resetRampupDetail);
+
+    renderTabs();
+    loadWorkbook()
+      .then(data => {
+        state.workbook = data;
+        renderRampupPage();
+      })
+      .catch(err => {
+        const status = document.getElementById('rampup-status');
+        status.className = 'error';
+        status.innerHTML = `Could not load <strong>./data/workbook.json</strong>.<br/><br/>Make sure the generated JSON file is in the data folder next to this HTML.\n<br/><span class="hint">${err.message}</span>`;
+      });
+  </script>
+</body>
+</html>
