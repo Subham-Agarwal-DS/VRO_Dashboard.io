@@ -1,0 +1,39 @@
+name: Refresh dashboard data
+
+on:
+  push:
+    paths:
+      - "data/Ramp up Data.xlsx"
+      - "scripts/excel_to_json.py"
+      - ".github/workflows/refresh-data.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install openpyxl
+
+      - name: Convert Excel to JSON
+        run: python scripts/excel_to_json.py
+
+      - name: Commit generated JSON
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add data/workbook.json
+          git diff --cached --quiet || git commit -m "Refresh dashboard data"
+          git push
